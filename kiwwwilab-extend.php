@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.6
+ * Version:           1.0.7
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
