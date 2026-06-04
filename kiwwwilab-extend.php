@@ -15,21 +15,33 @@ if(!defined('ABSPATH')) {
 	exit;
 }
 
-// Carrega la llibreria d'actualitzacions
-require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+// 2. L'espai de noms (use) HA D'ANAR AQUÍ dalt, mai dins d'un "if"
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-$myUpdateChecker = PucFactory::buildUpdateChecker(
-    'https://github.com/kiwwwilab/kiwwwilab-extend/', // URL del teu GitHub
-    __FILE__, // Fitxer principal del plugin
-    'kiwwwilab-extend' // L'slug del teu plugin (el nom de la carpeta)
-);
+// 3. Definim la ruta exacta a la llibreria
+$puc_file = __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
 
-// OPCIONAL: Si el teu repositori és privat, hauries de configurar un Token d'accés:
-// $myUpdateChecker->setAuthentication('el-teu-token-de-github');
+// 4. Comprovem si el fitxer existeix abans d'executar la llibreria
+if ( file_exists( $puc_file ) ) {
+    
+    require_once $puc_file;
+    
+    // Inicialitzem el comprovador d'actualitzacions
+    $myUpdateChecker = PucFactory::buildUpdateChecker(
+        'https://github.com/kiwwwilab/kiwwwilab-extend/', // URL del teu GitHub
+        __FILE__, // Camí al fitxer actual
+        'kiwwwilab-extend' // L'slug del teu plugin (nom de la carpeta)
+    );
 
-// Força a buscar actualitzacions a la branca principal (main) o mitjançant GitHub Releases
-$myUpdateChecker->setBranch('main');
+    // CONFIGURACIÓ SEGONS DOCUMENTACIÓ:
+    // Per defecte comprova els "Releases". Si vols forçar a que busqui els 
+    // canvis de la branca 'main' cada vegada que fas commit, activa aquesta línia:
+    $myUpdateChecker->setBranch('main');
+
+} else {
+    // Si la ruta no és correcta, es desarà aquest avís al log del servidor sense trencar la web
+    error_log('Error de Plugin Update Checker: No es troba el fitxer a ' . $puc_file);
+}
 
 function kiwwwilab_register_server_blocks() {
 
