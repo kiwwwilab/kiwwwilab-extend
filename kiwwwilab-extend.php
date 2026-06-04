@@ -15,7 +15,21 @@ if(!defined('ABSPATH')) {
 	exit;
 }
 
-include plugin_dir_path( __FILE__ ) . '/lib/class-updater.php';
+// Carrega la llibreria d'actualitzacions
+require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
+    'https://github.com/kiwwwilab/kiwwwilab-extend/', // URL del teu GitHub
+    __FILE__, // Fitxer principal del plugin
+    'kiwwwilab-extend' // L'slug del teu plugin (el nom de la carpeta)
+);
+
+// OPCIONAL: Si el teu repositori és privat, hauries de configurar un Token d'accés:
+// $myUpdateChecker->setAuthentication('el-teu-token-de-github');
+
+// Força a buscar actualitzacions a la branca principal (main) o mitjançant GitHub Releases
+$myUpdateChecker->setBranch('main');
 
 function kiwwwilab_register_server_blocks() {
 
