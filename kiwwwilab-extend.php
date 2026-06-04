@@ -15,6 +15,8 @@ if(!defined('ABSPATH')) {
 	exit;
 }
 
+include plugin_dir_path( __FILE__ ) . '/lib/class-updater.php';
+
 function kiwwwilab_register_server_blocks() {
 
     register_block_type(
