@@ -21,6 +21,10 @@
 }
 
 /* GSAP - Cursor-Tracking Image Preview */
+.gsap-list-image-wrap {
+    position: relative;
+}
+
 .gsap-list-image-wrap .gsap-list-image {
   position: fixed;
   top: 0;
