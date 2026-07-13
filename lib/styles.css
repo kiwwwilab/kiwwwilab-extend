@@ -20,6 +20,19 @@
   pointer-events: none;
 }
 
+/* GSAP - Cursor-Tracking Image Preview */
+.gsap-list-image-wrap .gsap-list-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  transform: translateX(-50%) translateY(-50%);
+  z-index: 9;
+  opacity: 0;
+  visibily: hidden;
+  pointer-events: none;
+}
+
 /* Lenis - Smooth Scroll */
 
 html.lenis,
