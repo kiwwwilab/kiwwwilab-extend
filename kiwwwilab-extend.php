@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.26
+ * Version:           1.0.27
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -218,9 +218,9 @@ function ke_blocks_register_assets() {
 	$gsap_plugins = apply_filters('kiwwwilab_extend_register_gsap_plugins', array(
 		'SplitText',
 		'ScrollTrigger',
-		'ScrollSmoother',
+		//'ScrollSmoother',
 		'ScrambleTextPlugin',
-		'MotionPathPlugin'
+		//'MotionPathPlugin'
 	) );
 
 	$enqueue_dependencies = array('jquery', 'lenis');
