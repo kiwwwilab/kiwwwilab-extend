@@ -63,3 +63,34 @@ html.lenis body {
   transition-duration: 1ms;
   transition-behavior: allow-discrete;
 }
+
+/* GSAP - Horizontal Scroll */
+
+.gsap-horizontal-scroll {
+  overflow: hidden;
+  position: relative;
+}
+
+.gsap-horizontal-scroll .gsap-horizontal-scroll__wrapper,
+.gsap-horizontal-scroll .gsap-horizontal-scroll__strip {
+  display: flex;
+  flex-wrap: nowrap;
+  will-change: transform;
+  position: relative;
+}
+
+.gsap-horizontal-scroll .gsap-horizontal-scroll__strip > * {
+  box-sizing: content-box;
+}
+
+@media screen and (max-width: 767px) {
+
+  .gsap-horizontal-scroll.gsap-disable-on-viewport .gsap-horizontal-scroll__wrapper,
+  .gsap-horizontal-scroll.gsap-disable-on-viewport .gsap-horizontal-scroll__strip {
+    display: block;
+  }
+
+  .gsap-horizontal-scroll.gsap-disable-on-viewport .gsap-horizontal-scroll__strip > * {
+  box-sizing: inherit;
+  }
+}
