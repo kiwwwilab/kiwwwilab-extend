@@ -205,6 +205,13 @@ function ke_register_blocks_types($blocks) {
 
 }
 
+/* Deshabilita el botó de Editar Patrón per millorar la usabilitat dels clients */
+
+add_filter( 'block_editor_settings_all', function( $settings ) {
+    $settings['disableContentOnlyForUnsyncedPatterns'] = true;
+    return $settings;
+} );
+
 /* Registra els assets necessaris per fer funcionar els blocks i els block styles creats */
 
 add_action( 'wp_enqueue_scripts', 'ke_blocks_register_assets' );
