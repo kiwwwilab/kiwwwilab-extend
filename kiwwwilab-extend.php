@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.33
+ * Version:           1.0.34
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -160,6 +160,7 @@ function ke_register_blocks() {
 	$blocks = array(
 		'carousel',
 		'slide',
+		'image-compare',
 	);
 
 	ke_register_blocks_types( $blocks );
