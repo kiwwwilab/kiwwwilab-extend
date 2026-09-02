@@ -5,6 +5,7 @@
   var MediaUploadCheck = blockEditor.MediaUploadCheck;
   var Button = components.Button;
   var useState = element.useState;
+  var useBlockProps = blockEditor.useBlockProps;
 
   registerBlockType('kiwwwilab/image-compare', {
     edit: function (props) {
@@ -13,6 +14,10 @@
       var posState = useState(attributes.sliderPosition);
       var sliderPos = posState[0];
       var setSliderPos = posState[1];
+
+      var blockProps = useBlockProps({
+        className: 'kiwwwilab-ic-wrapper'
+      });
 
       function onSelectBefore(media) {
         setAttributes({ beforeImage: media.url });
@@ -30,7 +35,7 @@
 
       return el(
         'div',
-        { className: props.className + ' kiwwwilab-ic-container' },
+        { className: 'kiwwwilab-ic-container' },
         el(
           'div',
           { className: 'kiwwwilab-ic-controls' },
@@ -70,13 +75,9 @@
         attributes.beforeImage && attributes.afterImage
           ? el(
               'div',
-              { className: 'kiwwwilab-ic-wrapper' },
+              blockProps,
               el('img', { src: attributes.afterImage, alt: 'Después', className: 'kiwwwilab-ic-img kiwwwilab-ic-after' }),
-              el(
-                'div',
-                { className: 'kiwwwilab-ic-before-wrap', style: { width: sliderPos + '%' } },
-                el('img', { src: attributes.beforeImage, alt: 'Antes', className: 'kiwwwilab-ic-img kiwwwilab-ic-before' })
-              ),
+              el('img', { src: attributes.beforeImage, alt: 'Antes', className: 'kiwwwilab-ic-img kiwwwilab-ic-before', style: { clipPath: 'inset(0 ' + (100 - sliderPos) + '% 0 0)' } }),
               el(
                 'div',
                 { className: 'kiwwwilab-ic-slide-button', style: { left: sliderPos + '%' } }
@@ -102,15 +103,16 @@
         return null;
       }
 
+      var blockProps = useBlockProps.save({
+        className: 'kiwwwilab-ic-wrapper',
+        'data-pos': pos
+      });
+
       return el(
         'div',
-        { className: 'kiwwwilab-ic-wrapper', 'data-pos': pos },
+        blockProps,
         el('img', { src: attributes.afterImage, alt: 'Después', className: 'kiwwwilab-ic-img kiwwwilab-ic-after' }),
-        el(
-          'div',
-          { className: 'kiwwwilab-ic-before-wrap', style: { width: pos + '%' } },
-          el('img', { src: attributes.beforeImage, alt: 'Antes', className: 'kiwwwilab-ic-img kiwwwilab-ic-before' })
-        ),
+        el('img', { src: attributes.beforeImage, alt: 'Antes', className: 'kiwwwilab-ic-img kiwwwilab-ic-before', style: { clipPath: 'inset(0 ' + (100 - pos) + '% 0 0)' } }),
         el(
           'div',
           { className: 'kiwwwilab-ic-slide-button', style: { left: pos + '%' } }

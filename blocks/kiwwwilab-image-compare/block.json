@@ -6,6 +6,18 @@
   "category": "media",
   "icon": "image-flip-horizontal",
   "description": "Un selector deslizante para comparar dos imágenes (Antes y Después).",
+  "supports": {
+    "align": ["left", "center", "right", "wide", "full"],
+    "dimensions": {
+      "aspectRatio": true
+    },
+    "border": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
+    }
+  },
   "attributes": {
     "beforeImage": {
       "type": "string",
@@ -18,6 +30,9 @@
     "sliderPosition": {
       "type": "number",
       "default": 50
+    },
+    "style": {
+      "type": "object"
     }
   },
   "editorScript": "file:./index.js",

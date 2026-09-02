@@ -5,11 +5,14 @@ document.addEventListener('DOMContentLoaded', function () {
     slider.addEventListener('input', function (e) {
       var container = e.target.closest('.kiwwwilab-ic-wrapper');
       var beforeButton = container.querySelector('.kiwwwilab-ic-slide-button');
-      var beforeWrap = container.querySelector('.kiwwwilab-ic-before-wrap');
-      if (beforeWrap) {
-        beforeWrap.style.width = e.target.value + '%';
+      var beforeImg = container.querySelector('.kiwwwilab-ic-before');
+      var insetRight = 100 - e.target.value;
+      if (beforeImg) {
+        beforeImg.style.clipPath = 'inset(0 ' + insetRight + '% 0 0)';
         beforeButton.style.left = e.target.value + '%';
       }
     });
   });
 });
+
+
