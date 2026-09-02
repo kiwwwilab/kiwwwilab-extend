@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "kiwwwilab/image-compare",
+  "title": "Kiwwwilab | Image Compare",
+  "category": "media",
+  "icon": "image-flip-horizontal",
+  "description": "Un selector deslizante para comparar dos imágenes (Antes y Después).",
+  "attributes": {
+    "beforeImage": {
+      "type": "string",
+      "default": ""
+    },
+    "afterImage": {
+      "type": "string",
+      "default": ""
+    },
+    "sliderPosition": {
+      "type": "number",
+      "default": 50
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style.css",
+  "script": "file:./frontend.js"
+}
