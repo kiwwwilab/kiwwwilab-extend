@@ -174,6 +174,14 @@ function ke_register_blocks() {
     );
 
 	register_block_style(
+        'core/gallery',
+        array(
+            'name'         => 'grid-dinamico',
+            'label'        => __( 'Grid Adaptativo', 'kiwwwilab-extend' ),
+        )
+    );
+
+	register_block_style(
         'core/button',
         array(
             'name'         => 'invisible',
