@@ -244,3 +244,68 @@ function ke_blocks_register_assets() {
 	wp_enqueue_script( 'kiwwwilab-extend-script', plugins_url( '/lib/scripts.js', __FILE__ ), $enqueue_dependencies, $scripts_js_ver );
 	
 }
+
+
+function ke_editor_assets() {
+    wp_enqueue_script(
+        'swiper-block-variation',
+        plugins_url( '/blocks/block-scripts.js', __FILE__ ),
+        array( 'wp-blocks', 'wp-dom-ready', 'wp-edit-post' ),
+        '1.0.0'
+    );
+}
+add_action( 'enqueue_block_editor_assets', 'ke_editor_assets' );
+
+function ke_render_swiper_query_loop( $block_content, $block ) {
+    if ( empty( $block['attrs']['className'] ) || ! is_string( $block['attrs']['className'] ) ) {
+        return $block_content;
+    }
+
+    if ( false === strpos( $block['attrs']['className'], 'swiper-query-loop-block' ) ) {
+        return $block_content;
+    }
+
+    // Encolar scripts/estilos condicionalmente
+    wp_enqueue_style( 'kiwwwilab-slider-style' );
+    wp_enqueue_script( 'kiwwwilab-slider-script' );
+
+    // Instanciar el procesador nativo de etiquetas de WordPress
+    $tags = new WP_HTML_Tag_Processor( $block_content );
+
+    // 1. Añadir la clase 'swiper-wrapper' al contenedor del Query Loop
+    if ( $tags->next_tag( array( 'class_name' => 'wp-block-post-template' ) ) ) {
+        $tags->add_class( 'swiper-wrapper' );
+    }
+
+    // 2. Añadir la clase 'swiper-slide' a cada entrada (wp-block-post)
+    while ( $tags->next_tag( array( 'class_name' => 'wp-block-post' ) ) ) {
+        $tags->add_class( 'swiper-slide' );
+    }
+
+    // Guardar los cambios de clases aplicados por el procesador
+    $html_procesado = $tags->get_updated_html();
+
+    // 3. Definir los controles de Swiper
+    $controles_html = '
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-pagination"></div>
+    ';
+
+    // 4. Inyectar los controles justo antes del cierre de la lista (</ul>, </ol> o </div>)
+    // De esta forma quedan DENTRO del swiper-wrapper como sus últimos hijos
+    $posicion_cierre = strrpos( $html_procesado, '</' );
+
+    if ( false !== $posicion_cierre ) {
+        $html_con_controles = substr_replace( $html_procesado, $controles_html, $posicion_cierre, 0 );
+    } else {
+        $html_con_controles = $html_procesado . $controles_html;
+    }
+
+    // Retornar envuelto en la clase raíz
+    return sprintf(
+        '<div class="swiper-query-loop">%s</div>',
+        $html_con_controles
+    );
+}
+add_filter( 'render_block_core/query', 'ke_render_swiper_query_loop', 10, 2 );
