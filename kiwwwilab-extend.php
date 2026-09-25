@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.40
+ * Version:           1.0.41
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -86,6 +86,22 @@ function kiwwwilab_register_server_blocks() {
 
 				$text_before = $attributes['before'];
 				$text_after = $attributes['after'];
+
+				if ( ! $post_id && is_admin() ) {
+					if($attributes['key'] != '') {
+						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] ) . '</div>';
+					} else {
+                    	$output = esc_html__( 'This block shows the custom field value defined in the block options.', 'kiwwwilab' ) . '</div>';
+					}
+
+					return sprintf(
+						'<div %s>%s%s%s</div>',
+						get_block_wrapper_attributes(),
+						$text_before,
+						$output,
+						$text_after
+					);
+                }
 
 				if($attributes['type'] == 'User' || $attributes['type'] == 'Term') {
 					$post_id = get_queried_object_id();
