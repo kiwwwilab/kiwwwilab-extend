@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.43
+ * Version:           1.0.44
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -339,6 +339,11 @@ function ke_blocks_register_assets() {
 	}
 
 	wp_enqueue_script( 'kiwwwilab-extend-script', plugins_url( '/lib/scripts.js', __FILE__ ), $enqueue_dependencies, $scripts_js_ver );
+
+	wp_localize_script('kiwwwilab-extend-script', 'ajax_posts_params', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('ajax_posts_nonce'),
+    ));
 	
 }
 
