@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.42
+ * Version:           1.0.43
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -166,6 +166,71 @@ function kiwwwilab_register_server_blocks() {
 				'color'        => array( 'text' => true, 'background' => true ),
                 'spacing'      => array( 'padding' => true ),
                 'border'       => true,
+            ),
+			'icon' => 'editor-code'
+        )
+    );
+
+	register_block_type(
+        'kiwwwilab/more-posts-ajax',
+        array(
+            'title'           => __( 'Kiwwwilab | Show more posts with ajax', 'kiwwwilab' ),
+            'attributes'      => array(
+                'button_text'   => array(
+                    'label'   => __( 'Button Text', 'kiwwwilab' ),
+                    'type'    => 'string',
+                    'default' => '',
+                ),
+                'button_text_loading'   => array(
+                    'label'   => __( 'Button "Loading" Text', 'kiwwwilab' ),
+                    'type'    => 'string',
+                    'default' => '',
+                ),
+                'button_text_none'   => array(
+                    'label'   => __( 'Button "No more posts" Text', 'kiwwwilab' ),
+                    'type'    => 'string',
+                    'default' => '',
+                ),
+                'pattern_slug'   => array(
+                    'label'   => __( 'Pattern ID', 'kiwwwilab' ),
+                    'type'    => 'string',
+                    'default' => '',
+                ),
+            ),
+            'render_callback' => function ( $attributes, $content, $block ) {
+
+				$output = '';
+                $posts_per_page = get_option( 'posts_per_page' );
+				$button_text = isset($attributes['button_text']) ? $attributes['button_text'] : __('Show more', 'kiwwwilab');
+                $button_text_loading = isset($attributes['button_text_loading']) ? $attributes['button_text_loading'] : __('Loading...', 'kiwwwilab');
+                $button_text_none = isset($attributes['button_text_none']) ? $attributes['button_text_none'] : __('No more posts to show', 'kiwwwilab');
+                $pattern_slug   = isset($attributes['pattern_slug']) ? sanitize_text_field($attributes['pattern_slug']) : '';
+                $current_cat_id = (is_tax() || is_category()) ? get_queried_object_id() : '';
+                $current_tax = isset( get_queried_object()->taxonomy ) ? get_queried_object()->taxonomy : '';
+                $current_post_type = is_post_type_archive() ? get_post_type() : 'post';
+
+                $wrapper_attributes = get_block_wrapper_attributes();
+
+                ob_start();
+
+                ?>
+                <div <?php echo $wrapper_attributes ?>>
+                <div class="ajax-posts-pagination">
+                        <a style="cursor:pointer;" class="load-more-posts-btn" data-page="1" data-button-none="<?php echo esc_attr($button_text_none); ?>" data-button-loading="<?php echo esc_attr($button_text_loading); ?>" data-posts-per-page="<?php echo esc_attr($posts_per_page); ?>" data-pattern="<?php echo esc_attr($pattern_slug); ?>" data-button="<?php echo esc_attr($button_text); ?>" data-post-type="<?php echo $current_post_type ?>" data-tax="<?php echo $current_tax ?>" data-cat="<?php echo $current_cat_id ?>"><?php echo $button_text; ?></a>
+                </div>
+                </div>
+                <?php
+                return ob_get_clean();
+				
+            },
+            'supports'        => array(
+                'autoRegister' => true,
+                'align' => true,
+                'dimensions'   => array( 'width' => true ),
+				'color'        => array( 'text' => true, 'background' => true ),
+                'spacing'      => array( 'padding' => true ),
+                'border'       => true,
+                'typography'   => array( 'textAlign' => true, 'fontSize' => true ),
             ),
 			'icon' => 'editor-code'
         )
@@ -341,3 +406,78 @@ function ke_render_swiper_query_loop( $block_content, $block ) {
     );
 }
 add_filter( 'render_block_core/query', 'ke_render_swiper_query_loop', 10, 2 );
+
+// Función que renderiza entradas aplicando el patrón
+function ke_get_posts_html($page, $posts_per_page, $pattern_slug, $current_cat_id, $current_tax, $current_post_type) {
+
+    $args = array(
+        'post_type'      => $current_post_type,
+        'posts_per_page' => $posts_per_page,
+        'paged'          => $page,
+        'post_status'    => 'publish',
+    );
+
+    if (!empty($current_cat_id)) {
+        $args['tax_query'] = array(
+            array(
+            'taxonomy' => $current_tax,
+            'field' => 'term_id',
+            'terms' => intval($current_cat_id),
+            ),
+        );
+    }
+
+    $query = new WP_Query($args);
+
+    if (!$query->have_posts()) {
+        return '';
+    }
+
+    if (empty($pattern_slug)) {
+        $parsed_blocks = parse_blocks('<!-- wp:post-title /--><!-- wp:post-excerpt /-->');
+    } else {
+        $parsed_blocks = parse_blocks('<!-- wp:block {"ref":' . $pattern_slug . '} /-->');
+    }
+
+    $output = '';
+
+    while ($query->have_posts()) {
+        $query->the_post();
+        $post_id = get_the_ID();
+
+        $output .= '<li class="' . esc_attr( implode( ' ', get_post_class( 'ajax-post-item', $post_id ) ) ) . '">';
+
+        // 2. Renderizar cada bloque inyectando el contexto de la entrada actual
+        foreach ($parsed_blocks as $block) {
+            $output .= render_block($block, array(
+                'postType' => get_post_type(),
+                'postId'   => $post_id,
+            ));
+        }
+
+        $output .= '</li>';
+    }
+
+    wp_reset_postdata();
+
+    return $output;
+}
+
+// Endpoint AJAX
+add_action('wp_ajax_load_more_posts', 'ke_ajax_load_more_posts_handler');
+add_action('wp_ajax_nopriv_load_more_posts', 'ke_ajax_load_more_posts_handler');
+
+function ke_ajax_load_more_posts_handler() {
+    check_ajax_referer('ajax_posts_nonce', 'nonce');
+
+    $page           = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $posts_per_page = isset($_POST['posts_per_page']) ? intval($_POST['posts_per_page']) : 6;
+    $pattern_slug   = isset($_POST['pattern_slug']) ? sanitize_text_field($_POST['pattern_slug']) : '';
+    $current_cat_id   = isset($_POST['current_cat']) ? $_POST['current_cat'] : '';
+    $current_tax   = isset($_POST['current_tax']) ? $_POST['current_tax'] : '';
+    $current_post_type   = isset($_POST['current_post_type']) ? $_POST['current_post_type'] : '';
+
+    $html = ke_get_posts_html($page, $posts_per_page, $pattern_slug, $current_cat_id, $current_tax, $current_post_type);
+
+    wp_send_json_success(array('html' => $html));
+}
