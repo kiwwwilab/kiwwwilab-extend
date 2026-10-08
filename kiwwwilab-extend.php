@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.44
+ * Version:           1.0.45
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -486,3 +486,31 @@ function ke_ajax_load_more_posts_handler() {
 
     wp_send_json_success(array('html' => $html));
 }
+
+/**
+ * Add 'rand' to the allowed orderby values in REST API collection params
+ * for posts and pages (which is what the Query Loop usually uses).
+ */
+function ke_allow_rand_orderby_in_rest() {
+
+    $post_types = get_post_types(array('public' => true), 'names', 'and');
+
+    foreach ( $post_types as $post_type ) {
+
+        add_filter(
+            "rest_{$post_type}_collection_params",
+            function( $params ) {
+                if (
+                    isset( $params['orderby']['enum'] )
+                    && is_array( $params['orderby']['enum'] )
+                    && ! in_array( 'rand', $params['orderby']['enum'], true )
+                ) {
+                    $params['orderby']['enum'][] = 'rand';
+                }
+
+                return $params;
+            }
+        );
+    }
+}
+add_action( 'rest_api_init', 'ke_allow_rand_orderby_in_rest' );
