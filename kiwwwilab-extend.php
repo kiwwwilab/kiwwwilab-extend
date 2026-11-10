@@ -267,6 +267,97 @@ function ke_register_blocks() {
         array(
             'name'         => 'grid-dinamico',
             'label'        => __( 'Grid Adaptativo', 'kiwwwilab-extend' ),
+            'inline_style' => '
+            .wp-block-gallery.is-style-grid-dinamico {
+            display: grid !important;
+            grid-auto-flow: dense;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 0;
+            }
+
+            .wp-block-gallery.is-style-grid-dinamico .wp-block-image {
+            margin: 0 !important;
+            width: 100% !important;
+            }
+
+            .wp-block-gallery.is-style-grid-dinamico .wp-block-image img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+            }
+            .wp-block-gallery.is-style-grid-dinamico.has-nested-images figure.wp-block-image:not(#individual-image) {
+                width: 100%;
+            }
+            @media (min-width: 768px) {
+                .wp-block-gallery.is-style-grid-dinamico {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr); 
+                    grid-auto-flow: dense;
+                }
+                .wp-block-gallery.is-style-grid-dinamico.columns-2 {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 20px;
+                }
+                .wp-block-gallery.is-style-grid-dinamico.columns-4 {
+                grid-template-columns: repeat(12, 1fr) !important; 
+                gap: 16px;
+                }
+                .wp-block-gallery.is-style-grid-dinamico.columns-5 {
+                grid-template-columns: repeat(10, 1fr) !important; 
+                gap: 16px;
+                }
+                .wp-block-gallery.is-style-grid-dinamico .wp-block-image img {
+                height: 350px;
+                }
+            }'
+        )
+    );
+
+    register_block_style(
+        'core/image',
+        array(
+            'name'         => 'landscape-image',
+            'label'        => __( 'Landscape', 'kiwwwilab-extend' ),
+            'inline_style' => '
+            .wp-block-gallery .wp-block-image.is-style-landscape-image, .wp-block-gallery.columns-2 .wp-block-image.is-style-landscape-image {
+                grid-column: span 2;
+            }
+            .wp-block-gallery .wp-block-image.is-style-landscape-image img {
+                aspect-ratio: 3 / 2;
+            }
+            @media (min-width: 768px) {
+                .wp-block-gallery.columns-4 .wp-block-image.is-style-landscape-image {
+                    grid-column: span 6;
+                }
+                .wp-block-gallery.columns-5 .wp-block-image.is-style-landscape-image {
+                    grid-column: span 5;
+                }
+            }'
+        )
+    );
+
+    register_block_style(
+        'core/image',
+        array(
+            'name'         => 'portrait-image',
+            'label'        => __( 'Portrait', 'kiwwwilab-extend' ),
+            'inline_style' => '
+            .wp-block-gallery .wp-block-image.is-style-portrait-image, .wp-block-gallery.columns-2 .wp-block-image.is-style-portrait-image {
+                grid-column: span 1;
+            }
+            .wp-block-gallery .wp-block-image.is-style-portrait-image img {
+                aspect-ratio: 2 / 3;
+            }
+            @media (min-width: 768px) {
+                .wp-block-gallery.columns-4 .wp-block-image.is-style-portrait-image {
+                    grid-column: span 3;
+                }
+                .wp-block-gallery.columns-5 .wp-block-image.is-style-portrait-image {
+                    grid-column: span 2;
+                }
+            }'
         )
     );
 
