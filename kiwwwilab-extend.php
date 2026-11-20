@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.48
+ * Version:           1.0.49
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -83,6 +83,11 @@ function kiwwwilab_register_server_blocks() {
                     'enum'    => array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' ),
                     'default' => 'div',
                 ),
+				'link'    => array(
+                    'label'   => __( 'Enlazar al objeto', 'kiwwwilab' ),
+                    'type'    => 'boolean',
+                    'default' => false,
+                ),
             ),
             'render_callback' => function ( $attributes, $content, $block ) {
 
@@ -116,6 +121,22 @@ function kiwwwilab_register_server_blocks() {
 
 				if($attributes['type'] == 'User' || $attributes['type'] == 'Term') {
 					$post_id = get_queried_object_id();
+				}
+
+				// URL del enlace según el tipo de objeto: Post → entrada, User → página del autor, Term → archivo del término
+				$post_link = '';
+				if ( ! empty( $attributes['link'] ) && $post_id ) {
+					if ( $attributes['type'] == 'Post' ) {
+						$post_link = get_permalink( $post_id );
+					} else if ( $attributes['type'] == 'User' ) {
+						$post_link = get_author_posts_url( $post_id );
+					} else if ( $attributes['type'] == 'Term' ) {
+						$term = get_term( $post_id );
+						if ( $term && ! is_wp_error( $term ) ) {
+							$term_link = get_term_link( $term );
+							$post_link = is_wp_error( $term_link ) ? '' : $term_link;
+						}
+					}
 				}
 				
 				if( $attributes['type'] == 'Site' && $attributes['key'] != '' && get_option( $attributes['key'] ) != '' ) {
@@ -161,14 +182,18 @@ function kiwwwilab_register_server_blocks() {
 
 				if($output) {
 
+					if ( $post_link ) {
+						$output = sprintf( '<a href="%s">%s</a>', esc_url( $post_link ), $output );
+					}
+
+					$inner = $text_before . $output . $text_after;
+
 					return sprintf(
-						'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
+						'<%1$s %2$s>%3$s</%1$s>',
 						$tag,
 						get_block_wrapper_attributes(),
-						$text_before,
-						$output,
-						$text_after
-					);		
+						$inner
+					);
 
 				}
 				
