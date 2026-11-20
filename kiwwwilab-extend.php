@@ -83,6 +83,11 @@ function kiwwwilab_register_server_blocks() {
                     'enum'    => array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' ),
                     'default' => 'div',
                 ),
+				'link'    => array(
+                    'label'   => __( 'Enlazar al post', 'kiwwwilab' ),
+                    'type'    => 'boolean',
+                    'default' => false,
+                ),
             ),
             'render_callback' => function ( $attributes, $content, $block ) {
 
@@ -96,6 +101,9 @@ function kiwwwilab_register_server_blocks() {
 				// Etiqueta HTML que envuelve el contenido (validada contra una lista blanca)
 				$allowed_tags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' );
 				$tag = isset( $attributes['tag'] ) && in_array( $attributes['tag'], $allowed_tags, true ) ? $attributes['tag'] : 'div';
+
+				// URL del post vinculado (se guarda antes de que $post_id pueda cambiar a un usuario o término)
+				$post_link = ! empty( $attributes['link'] ) && $post_id ? get_permalink( $post_id ) : '';
 
 				if ( ! $post_id ) {
 					if($attributes['key'] != '') {
@@ -161,14 +169,18 @@ function kiwwwilab_register_server_blocks() {
 
 				if($output) {
 
+					$inner = $text_before . $output . $text_after;
+
+					if ( $post_link ) {
+						$inner = sprintf( '<a href="%s">%s</a>', esc_url( $post_link ), $inner );
+					}
+
 					return sprintf(
-						'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
+						'<%1$s %2$s>%3$s</%1$s>',
 						$tag,
 						get_block_wrapper_attributes(),
-						$text_before,
-						$output,
-						$text_after
-					);		
+						$inner
+					);
 
 				}
 				
