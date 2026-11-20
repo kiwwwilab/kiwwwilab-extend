@@ -84,7 +84,7 @@ function kiwwwilab_register_server_blocks() {
                     'default' => 'div',
                 ),
 				'link'    => array(
-                    'label'   => __( 'Enlazar al post', 'kiwwwilab' ),
+                    'label'   => __( 'Enlazar al objeto', 'kiwwwilab' ),
                     'type'    => 'boolean',
                     'default' => false,
                 ),
