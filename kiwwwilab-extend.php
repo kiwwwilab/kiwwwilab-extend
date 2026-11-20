@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.47
+ * Version:           1.0.48
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -77,6 +77,12 @@ function kiwwwilab_register_server_blocks() {
                     'type'    => 'string',
                     'default' => '',
                 ),
+				'tag'    => array(
+                    'label'   => __( 'HTML Tag', 'kiwwwilab' ),
+                    'type'    => 'string',
+                    'enum'    => array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' ),
+                    'default' => 'div',
+                ),
             ),
             'render_callback' => function ( $attributes, $content, $block ) {
 
@@ -87,15 +93,20 @@ function kiwwwilab_register_server_blocks() {
 				$text_before = $attributes['before'];
 				$text_after = $attributes['after'];
 
+				// Etiqueta HTML que envuelve el contenido (validada contra una lista blanca)
+				$allowed_tags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' );
+				$tag = isset( $attributes['tag'] ) && in_array( $attributes['tag'], $allowed_tags, true ) ? $attributes['tag'] : 'div';
+
 				if ( ! $post_id ) {
 					if($attributes['key'] != '') {
-						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] ) . '</div>';
+						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] );
 					} else {
-                    	$output = esc_html__( 'This block shows the custom field value defined in the block options.', 'kiwwwilab' ) . '</div>';
+                    	$output = esc_html__( 'This block shows the custom field value defined in the block options.', 'kiwwwilab' );
 					}
 
 					return sprintf(
-						'<div %s>%s%s%s</div>',
+						'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
+						$tag,
 						get_block_wrapper_attributes(),
 						$text_before,
 						$output,
@@ -142,16 +153,17 @@ function kiwwwilab_register_server_blocks() {
 
 				if ( ! $post_id && is_admin() ) {
 					if($attributes['key'] != '') {
-						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] ) . '</div>';
+						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] );
 					} else {
-                    	$output = esc_html__( 'This block shows the custom field value defined in the block options.', 'kiwwwilab' ) . '</div>';
+                    	$output = esc_html__( 'This block shows the custom field value defined in the block options.', 'kiwwwilab' );
 					}
                 }
 
 				if($output) {
 
 					return sprintf(
-						'<div %s>%s%s%s</div>',
+						'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
+						$tag,
 						get_block_wrapper_attributes(),
 						$text_before,
 						$output,
