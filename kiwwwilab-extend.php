@@ -169,11 +169,11 @@ function kiwwwilab_register_server_blocks() {
 
 				if($output) {
 
-					$inner = $text_before . $output . $text_after;
-
 					if ( $post_link ) {
-						$inner = sprintf( '<a href="%s">%s</a>', esc_url( $post_link ), $inner );
+						$output = sprintf( '<a href="%s">%s</a>', esc_url( $post_link ), $output );
 					}
+
+					$inner = $text_before . $output . $text_after;
 
 					return sprintf(
 						'<%1$s %2$s>%3$s</%1$s>',
