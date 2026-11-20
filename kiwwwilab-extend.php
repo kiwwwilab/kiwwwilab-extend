@@ -102,9 +102,6 @@ function kiwwwilab_register_server_blocks() {
 				$allowed_tags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' );
 				$tag = isset( $attributes['tag'] ) && in_array( $attributes['tag'], $allowed_tags, true ) ? $attributes['tag'] : 'div';
 
-				// URL del post vinculado (se guarda antes de que $post_id pueda cambiar a un usuario o término)
-				$post_link = ! empty( $attributes['link'] ) && $post_id ? get_permalink( $post_id ) : '';
-
 				if ( ! $post_id ) {
 					if($attributes['key'] != '') {
 						$output = sprintf( esc_html__( 'This block shows the "%s" value.', 'kiwwwilab' ), $attributes['key'] );
@@ -124,6 +121,22 @@ function kiwwwilab_register_server_blocks() {
 
 				if($attributes['type'] == 'User' || $attributes['type'] == 'Term') {
 					$post_id = get_queried_object_id();
+				}
+
+				// URL del enlace según el tipo de objeto: Post → entrada, User → página del autor, Term → archivo del término
+				$post_link = '';
+				if ( ! empty( $attributes['link'] ) && $post_id ) {
+					if ( $attributes['type'] == 'Post' ) {
+						$post_link = get_permalink( $post_id );
+					} else if ( $attributes['type'] == 'User' ) {
+						$post_link = get_author_posts_url( $post_id );
+					} else if ( $attributes['type'] == 'Term' ) {
+						$term = get_term( $post_id );
+						if ( $term && ! is_wp_error( $term ) ) {
+							$term_link = get_term_link( $term );
+							$post_link = is_wp_error( $term_link ) ? '' : $term_link;
+						}
+					}
 				}
 				
 				if( $attributes['type'] == 'Site' && $attributes['key'] != '' && get_option( $attributes['key'] ) != '' ) {
