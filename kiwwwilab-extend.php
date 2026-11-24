@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.50
+ * Version:           1.0.51
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -95,8 +95,8 @@ function kiwwwilab_register_server_blocks() {
 
 				$output = '';
 
-				$text_before = '<span class="before-text">' . $attributes['before'] . '</span>';
-				$text_after = '<span class="after-text">' . $attributes['after'] . '</span>';
+				$text_before = ($attributes['before'] != '') ? '<span class="before-text">' . $attributes['before'] . '</span>' : '';
+				$text_after = ($attributes['after'] != '') ? '<span class="after-text">' . $attributes['after'] . '</span>' : '';
 
 				// Etiqueta HTML que envuelve el contenido (validada contra una lista blanca)
 				$allowed_tags = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span' );
