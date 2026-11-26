@@ -3,7 +3,7 @@
  * Plugin Name:       Kiwwwilab Extend
  * Plugin URI:        https://kiwwwilab.com
  * Description:       This plugin extends all functions and blocks for Kiwwwilab themes.
- * Version:           1.0.51
+ * Version:           1.0.52
  * Author:            Laura Agustí
  * Author URI:        https://kiwwwilab.com
  * Text Domain:       kiwwwilab-extend
@@ -287,6 +287,7 @@ function ke_register_blocks() {
 		'carousel',
 		'slide',
 		'image-compare',
+		'query-filter',
 	);
 
 	ke_register_blocks_types( $blocks );
@@ -642,3 +643,96 @@ function ke_allow_rand_orderby_in_rest() {
     }
 }
 add_action( 'rest_api_init', 'ke_allow_rand_orderby_in_rest' );
+
+/* ------------------------------------------------------------------
+ * Bloc kiwwwilab/query-filter: filtre de taxonomia per al bloc Query
+ * ------------------------------------------------------------------ */
+
+/**
+ * Retorna el filtre actiu (taxonomia + terme) d'un Query a partir de la URL.
+ * - Query personalitzat: ke-tax-{queryId}=taxonomia & ke-term-{queryId}=term_id
+ * - Query que hereta la consulta principal: ke-tax=taxonomia & ke-term=term_id
+ *
+ * @param int|null $query_id ID del bloc Query, o null si hereta la consulta principal.
+ * @return array|false
+ */
+function ke_query_filter_get_active( $query_id ) {
+	$suffix   = null === $query_id ? '' : '-' . absint( $query_id );
+	$tax_key  = 'ke-tax' . $suffix;
+	$term_key = 'ke-term' . $suffix;
+
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Filtre públic de només lectura.
+	if ( empty( $_GET[ $tax_key ] ) || empty( $_GET[ $term_key ] ) ) {
+		return false;
+	}
+
+	$taxonomy = sanitize_key( wp_unslash( $_GET[ $tax_key ] ) );
+	$term_id  = absint( $_GET[ $term_key ] );
+	// phpcs:enable
+
+	if ( ! $term_id || ! taxonomy_exists( $taxonomy ) || ! is_taxonomy_viewable( $taxonomy ) ) {
+		return false;
+	}
+
+	return array(
+		'taxonomy' => $taxonomy,
+		'term_id'  => $term_id,
+	);
+}
+
+/**
+ * Afegeix el filtre de taxonomia a la tax_query d'un array d'arguments de WP_Query.
+ */
+function ke_query_filter_add_tax_query( $tax_query, $filter ) {
+	$tax_query   = is_array( $tax_query ) ? $tax_query : array();
+	$tax_query[] = array(
+		'taxonomy'         => $filter['taxonomy'],
+		'field'            => 'term_id',
+		'terms'            => array( $filter['term_id'] ),
+		'include_children' => true,
+	);
+	if ( count( $tax_query ) > 1 && empty( $tax_query['relation'] ) ) {
+		$tax_query['relation'] = 'AND';
+	}
+	return $tax_query;
+}
+
+/**
+ * Query blocs amb consulta personalitzada (no hereten la consulta de la plantilla).
+ * S'aplica també a la paginació, al recompte i al bloc "sense resultats".
+ */
+add_filter(
+	'query_loop_block_query_vars',
+	function ( $query, $block ) {
+		$query_id = isset( $block->context['queryId'] ) ? $block->context['queryId'] : null;
+		if ( null === $query_id || ! empty( $block->context['query']['inherit'] ) ) {
+			return $query;
+		}
+
+		$filter = ke_query_filter_get_active( $query_id );
+		if ( $filter ) {
+			$query['tax_query'] = ke_query_filter_add_tax_query( isset( $query['tax_query'] ) ? $query['tax_query'] : array(), $filter );
+		}
+
+		return $query;
+	},
+	10,
+	2
+);
+
+/**
+ * Query blocs que hereten la consulta principal (plantilles d'arxiu, blog...).
+ */
+add_action(
+	'pre_get_posts',
+	function ( $query ) {
+		if ( is_admin() || ! $query->is_main_query() || $query->is_singular() ) {
+			return;
+		}
+
+		$filter = ke_query_filter_get_active( null );
+		if ( $filter ) {
+			$query->set( 'tax_query', ke_query_filter_add_tax_query( $query->get( 'tax_query' ), $filter ) );
+		}
+	}
+);
