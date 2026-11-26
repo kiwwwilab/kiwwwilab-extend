@@ -5,7 +5,7 @@
 :where(.wp-block-kiwwwilab-query-filter) {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5em;
+	gap: var(--wp--preset--spacing--20, 10px);
 }
 
 /*
