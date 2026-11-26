@@ -115,13 +115,17 @@
 			var setAttributes = props.setAttributes;
 			var query = ( props.context && props.context.query ) || {};
 			var postType = query.postType || 'post';
+			// Amb la consulta predeterminada (inherit) el post type depèn de la plantilla
+			// (p. ex. productes de WooCommerce en un arxiu), així que mostrem totes les taxonomies.
+			var isInherit = !! query.inherit;
 
 			var taxonomies = useSelect(
 				function ( select ) {
-					var all = select( 'core' ).getTaxonomies( { type: postType, per_page: -1 } );
+					var args = isInherit ? { per_page: -1 } : { type: postType, per_page: -1 };
+					var all = select( 'core' ).getTaxonomies( args );
 					return all ? all.filter( function ( t ) { return t.visibility && t.visibility.show_ui; } ) : null;
 				},
-				[ postType ]
+				[ postType, isInherit ]
 			);
 
 			// Si no hi ha taxonomia triada (o no és del post type), triem la primera.
@@ -187,7 +191,8 @@
 			var blockProps = useBlockProps( { className: 'ke-query-filter', style: style } );
 
 			var taxonomyOptions = ( taxonomies || [] ).map( function ( t ) {
-				return { label: t.name, value: t.slug };
+				// Amb totes les taxonomies hi pot haver noms repetits: hi afegim el slug.
+				return { label: isInherit ? t.name + ' (' + t.slug + ')' : t.name, value: t.slug };
 			} );
 
 			var buttons = [
@@ -212,7 +217,9 @@
 							: taxonomyOptions.length
 							? el( SelectControl, {
 									label: __( 'Taxonomy', 'kiwwwilab-extend' ),
-									help: __( 'Taxonomies available for the Query post type.', 'kiwwwilab-extend' ),
+									help: isInherit
+										? __( 'The Query uses the default query: all taxonomies are available.', 'kiwwwilab-extend' )
+										: __( 'Taxonomies available for the Query post type.', 'kiwwwilab-extend' ),
 									value: attributes.taxonomy,
 									options: taxonomyOptions,
 									onChange: function ( value ) { setAttributes( { taxonomy: value } ); },
