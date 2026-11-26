@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "kiwwwilab/query-filter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "title": "Kiwwwilab | Taxonomy Filter",
   "category": "theme",
   "icon": "filter",
@@ -79,7 +79,8 @@
       "padding": true,
       "blockGap": true,
       "__experimentalSkipSerialization": [
-        "padding"
+        "padding",
+        "blockGap"
       ],
       "__experimentalDefaultControls": {
         "padding": true,

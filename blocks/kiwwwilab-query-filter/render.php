@@ -77,6 +77,32 @@ foreach ( $ke_qf_vars as $ke_qf_var => $ke_qf_attr ) {
 }
 
 /*
+ * Block spacing: l'apliquem nosaltres com a "gap" inline (en lloc del sistema de layout,
+ * que depèn d'una classe wp-container-* i del tema) perquè funcioni sempre, també
+ * després de substituir el Query per AJAX.
+ */
+$ke_qf_preset = static function ( $value ) use ( $ke_qf_clean ) {
+	$value = $ke_qf_clean( $value );
+	if ( 0 === strpos( $value, 'var:' ) ) {
+		$value = 'var(--wp--' . str_replace( '|', '--', substr( $value, 4 ) ) . ')';
+	}
+	return $value;
+};
+
+$ke_qf_gap = isset( $attributes['style']['spacing']['blockGap'] ) ? $attributes['style']['spacing']['blockGap'] : null;
+if ( is_string( $ke_qf_gap ) && '' !== $ke_qf_preset( $ke_qf_gap ) ) {
+	$ke_qf_style .= 'gap:' . $ke_qf_preset( $ke_qf_gap ) . ';';
+} elseif ( is_array( $ke_qf_gap ) ) {
+	// En layouts flex: "top" és l'espai entre files i "left" entre columnes.
+	if ( ! empty( $ke_qf_gap['top'] ) ) {
+		$ke_qf_style .= 'row-gap:' . $ke_qf_preset( $ke_qf_gap['top'] ) . ';';
+	}
+	if ( ! empty( $ke_qf_gap['left'] ) ) {
+		$ke_qf_style .= 'column-gap:' . $ke_qf_preset( $ke_qf_gap['left'] ) . ';';
+	}
+}
+
+/*
  * Opcions natives de WordPress (Padding i Border): no s'apliquen al contenidor
  * (__experimentalSkipSerialization) sinó a cada botó, amb una regla CSS generada
  * pel Style Engine. La classe és un hash dels estils, així és la mateixa

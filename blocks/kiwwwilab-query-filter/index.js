@@ -171,6 +171,19 @@
 				style[ '--ke-qf-border-color' ] = buttonStyles.borderColor;
 			}
 
+			// Block spacing com a gap inline (igual que render.php).
+			var gap = attributes.style && attributes.style.spacing && attributes.style.spacing.blockGap;
+			if ( typeof gap === 'string' ) {
+				style.gap = presetVar( gap );
+			} else if ( gap ) {
+				if ( gap.top ) {
+					style.rowGap = presetVar( gap.top );
+				}
+				if ( gap.left ) {
+					style.columnGap = presetVar( gap.left );
+				}
+			}
+
 			var blockProps = useBlockProps( { className: 'ke-query-filter', style: style } );
 
 			var taxonomyOptions = ( taxonomies || [] ).map( function ( t ) {
