@@ -1,16 +1,19 @@
 <?php
 /**
- * Kiwwwilab | Taxonomy Filter - versión snippet
+ * Taxonomy Filter (mutuacat/query-filter) - versión snippet
  *
- * Bloque "kiwwwilab/query-filter" para webs que NO tienen el plugin Kiwwwilab Extend.
+ * Bloque "mutuacat/query-filter", basado en el bloque del plugin Kiwwwilab Extend.
  * Se coloca dentro de un bloque Query y filtra sus posts por un término de taxonomía
  * con AJAX, sin recargar la página.
  *
  * Uso: pégalo como snippet PHP (Code Snippets, WPCode...) y ejecútalo "en todas partes".
  * Si tu plugin de snippets no admite la etiqueta de apertura de PHP, quita la primera línea.
  *
- * Si la web tiene el plugin Kiwwwilab Extend, este snippet no hace nada (el plugin ya
- * registra el bloque). Generado a partir de blocks/kiwwwilab-query-filter/ del plugin.
+ * Con la consulta predeterminada del Query (p.ej. en plantillas de archivo), el editor
+ * muestra todas las taxonomías, también las de WooCommerce.
+ *
+ * Puede convivir con el plugin Kiwwwilab Extend: si está activo, el filtrado de la
+ * consulta lo hace el plugin (usan los mismos parámetros de URL) y aquí no se duplica.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,10 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action(
 	'init',
 	function () {
-		// El plugin Kiwwwilab Extend (init, prioridad 10) ya registra este bloque.
-		if ( function_exists( 'ke_query_filter_get_active' ) || WP_Block_Type_Registry::get_instance()->is_registered( 'kiwwwilab/query-filter' ) ) {
+		if ( WP_Block_Type_Registry::get_instance()->is_registered( 'mutuacat/query-filter' ) ) {
 			return;
 		}
+
+		// Si el plugin Kiwwwilab Extend está activo, ya filtra las consultas con los mismos parámetros.
+		$kqf_has_plugin = function_exists( 'ke_query_filter_get_active' );
 
 		/*
 		 * Filtro activo (taxonomía + término) de un Query a partir de la URL.
@@ -69,36 +74,38 @@ add_action(
 		};
 
 		// Query personalizados (también paginación, recuento y "sin resultados").
-		add_filter(
-			'query_loop_block_query_vars',
-			function ( $query, $block ) use ( $kqf_get_active, $kqf_add_tax_query ) {
-				$query_id = isset( $block->context['queryId'] ) ? $block->context['queryId'] : null;
-				if ( null === $query_id || ! empty( $block->context['query']['inherit'] ) ) {
+		if ( ! $kqf_has_plugin ) {
+			add_filter(
+				'query_loop_block_query_vars',
+				function ( $query, $block ) use ( $kqf_get_active, $kqf_add_tax_query ) {
+					$query_id = isset( $block->context['queryId'] ) ? $block->context['queryId'] : null;
+					if ( null === $query_id || ! empty( $block->context['query']['inherit'] ) ) {
+						return $query;
+					}
+					$filter = $kqf_get_active( $query_id );
+					if ( $filter ) {
+						$query['tax_query'] = $kqf_add_tax_query( isset( $query['tax_query'] ) ? $query['tax_query'] : array(), $filter );
+					}
 					return $query;
-				}
-				$filter = $kqf_get_active( $query_id );
-				if ( $filter ) {
-					$query['tax_query'] = $kqf_add_tax_query( isset( $query['tax_query'] ) ? $query['tax_query'] : array(), $filter );
-				}
-				return $query;
-			},
-			10,
-			2
-		);
+				},
+				10,
+				2
+			);
 
-		// Query que heredan la consulta principal (archivos, blog...).
-		add_action(
-			'pre_get_posts',
-			function ( $query ) use ( $kqf_get_active, $kqf_add_tax_query ) {
-				if ( is_admin() || ! $query->is_main_query() || $query->is_singular() ) {
-					return;
+			// Query que heredan la consulta principal (archivos, blog...).
+			add_action(
+				'pre_get_posts',
+				function ( $query ) use ( $kqf_get_active, $kqf_add_tax_query ) {
+					if ( is_admin() || ! $query->is_main_query() || $query->is_singular() ) {
+						return;
+					}
+					$filter = $kqf_get_active( null );
+					if ( $filter ) {
+						$query->set( 'tax_query', $kqf_add_tax_query( $query->get( 'tax_query' ), $filter ) );
+					}
 				}
-				$filter = $kqf_get_active( null );
-				if ( $filter ) {
-					$query->set( 'tax_query', $kqf_add_tax_query( $query->get( 'tax_query' ), $filter ) );
-				}
-			}
-		);
+			);
+		}
 
 		// Scripts y estilos del bloque, como código inline.
 		wp_register_script( 'kqf-editor', false, array( 'wp-block-editor', 'wp-blocks', 'wp-components', 'wp-core-data', 'wp-data', 'wp-element', 'wp-i18n' ), '1.2.0', true );
@@ -214,19 +221,23 @@ add_action(
 		return copy;
 	}
 
-	blocks.registerBlockType( 'kiwwwilab/query-filter', {
+	blocks.registerBlockType( 'mutuacat/query-filter', {
 		edit: function ( props ) {
 			var attributes = props.attributes;
 			var setAttributes = props.setAttributes;
 			var query = ( props.context && props.context.query ) || {};
 			var postType = query.postType || 'post';
+			// Con la consulta predeterminada (inherit) el post type depende de la plantilla
+			// (p.ej. productos de WooCommerce en un archivo), así que mostramos todas las taxonomías.
+			var isInherit = !! query.inherit;
 
 			var taxonomies = useSelect(
 				function ( select ) {
-					var all = select( 'core' ).getTaxonomies( { type: postType, per_page: -1 } );
+					var args = isInherit ? { per_page: -1 } : { type: postType, per_page: -1 };
+					var all = select( 'core' ).getTaxonomies( args );
 					return all ? all.filter( function ( t ) { return t.visibility && t.visibility.show_ui; } ) : null;
 				},
-				[ postType ]
+				[ postType, isInherit ]
 			);
 
 			// Si no hi ha taxonomia triada (o no és del post type), triem la primera.
@@ -292,11 +303,12 @@ add_action(
 			var blockProps = useBlockProps( { className: 'ke-query-filter', style: style } );
 
 			var taxonomyOptions = ( taxonomies || [] ).map( function ( t ) {
-				return { label: t.name, value: t.slug };
+				// Con todas las taxonomías puede haber nombres repetidos: añadimos el slug.
+				return { label: isInherit ? t.name + ' (' + t.slug + ')' : t.name, value: t.slug };
 			} );
 
 			var buttons = [
-				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true', style: activeButtonStyle }, attributes.allText || __( 'All', 'kiwwwilab-extend' ) ),
+				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true', style: activeButtonStyle }, attributes.allText || __( 'All', 'mutuacat' ) ),
 			].concat(
 				termsData.terms.map( function ( term ) {
 					return el( 'button', { key: term.id, type: 'button', className: 'ke-query-filter__button', 'aria-pressed': 'false', style: buttonStyles.style }, term.name );
@@ -311,52 +323,54 @@ add_action(
 					null,
 					el(
 						PanelBody,
-						{ title: __( 'Filter settings', 'kiwwwilab-extend' ) },
+						{ title: __( 'Filter settings', 'mutuacat' ) },
 						taxonomies === null
 							? el( Spinner )
 							: taxonomyOptions.length
 							? el( SelectControl, {
-									label: __( 'Taxonomy', 'kiwwwilab-extend' ),
-									help: __( 'Taxonomies available for the Query post type.', 'kiwwwilab-extend' ),
+									label: __( 'Taxonomy', 'mutuacat' ),
+									help: isInherit
+										? __( 'The Query uses the default query: all taxonomies are available.', 'mutuacat' )
+										: __( 'Taxonomies available for the Query post type.', 'mutuacat' ),
 									value: attributes.taxonomy,
 									options: taxonomyOptions,
 									onChange: function ( value ) { setAttributes( { taxonomy: value } ); },
 									__next40pxDefaultSize: true,
 									__nextHasNoMarginBottom: true,
 							  } )
-							: el( Notice, { status: 'warning', isDismissible: false }, __( 'This post type has no taxonomies.', 'kiwwwilab-extend' ) ),
+							: el( Notice, { status: 'warning', isDismissible: false }, __( 'This post type has no taxonomies.', 'mutuacat' ) ),
 						el( TextControl, {
-							label: __( '"All" button text', 'kiwwwilab-extend' ),
+							label: __( '"All" button text', 'mutuacat' ),
 							value: attributes.allText,
 							onChange: function ( value ) { setAttributes( { allText: value } ); },
 							__next40pxDefaultSize: true,
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( ToggleControl, {
-							label: __( 'Hide empty terms', 'kiwwwilab-extend' ),
+							label: __( 'Hide empty terms', 'mutuacat' ),
 							checked: attributes.hideEmpty,
 							onChange: function ( value ) { setAttributes( { hideEmpty: value } ); },
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( SelectControl, {
-							label: __( 'Order terms by', 'kiwwwilab-extend' ),
+							label: __( 'Order terms by', 'mutuacat' ),
 							value: attributes.orderBy,
 							options: [
-								{ label: __( 'Name', 'kiwwwilab-extend' ), value: 'name' },
-								{ label: __( 'Slug', 'kiwwwilab-extend' ), value: 'slug' },
-								{ label: __( 'Post count', 'kiwwwilab-extend' ), value: 'count' },
-								{ label: __( 'ID', 'kiwwwilab-extend' ), value: 'id' },
+								{ label: __( 'Name', 'mutuacat' ), value: 'name' },
+								{ label: __( 'Slug', 'mutuacat' ), value: 'slug' },
+								{ label: __( 'Post count', 'mutuacat' ), value: 'count' },
+								{ label: __( 'ID', 'mutuacat' ), value: 'id' },
 							],
 							onChange: function ( value ) { setAttributes( { orderBy: value } ); },
 							__next40pxDefaultSize: true,
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( SelectControl, {
-							label: __( 'Order', 'kiwwwilab-extend' ),
+							label: __( 'Order', 'mutuacat' ),
 							value: attributes.order,
 							options: [
-								{ label: __( 'Ascending', 'kiwwwilab-extend' ), value: 'asc' },
-								{ label: __( 'Descending', 'kiwwwilab-extend' ), value: 'desc' },
+								{ label: __( 'Ascending', 'mutuacat' ), value: 'asc' },
+								{ label: __( 'Descending', 'mutuacat' ), value: 'desc' },
 							],
 							onChange: function ( value ) { setAttributes( { order: value } ); },
 							__next40pxDefaultSize: true,
@@ -368,14 +382,14 @@ add_action(
 					InspectorControls,
 					{ group: 'styles' },
 					el( PanelColorSettings, {
-						title: __( 'Button colors', 'kiwwwilab-extend' ),
+						title: __( 'Button colors', 'mutuacat' ),
 						initialOpen: true,
 						colorSettings: [
-							{ label: __( 'Background', 'kiwwwilab-extend' ), value: attributes.buttonBackground, onChange: function ( v ) { setAttributes( { buttonBackground: v || '' } ); } },
-							{ label: __( 'Text', 'kiwwwilab-extend' ), value: attributes.buttonTextColor, onChange: function ( v ) { setAttributes( { buttonTextColor: v || '' } ); } },
-							{ label: __( 'Background (selected)', 'kiwwwilab-extend' ), value: attributes.activeBackground, onChange: function ( v ) { setAttributes( { activeBackground: v || '' } ); } },
-							{ label: __( 'Text (selected)', 'kiwwwilab-extend' ), value: attributes.activeTextColor, onChange: function ( v ) { setAttributes( { activeTextColor: v || '' } ); } },
-							{ label: __( 'Border (selected)', 'kiwwwilab-extend' ), value: attributes.activeBorderColor, onChange: function ( v ) { setAttributes( { activeBorderColor: v || '' } ); } },
+							{ label: __( 'Background', 'mutuacat' ), value: attributes.buttonBackground, onChange: function ( v ) { setAttributes( { buttonBackground: v || '' } ); } },
+							{ label: __( 'Text', 'mutuacat' ), value: attributes.buttonTextColor, onChange: function ( v ) { setAttributes( { buttonTextColor: v || '' } ); } },
+							{ label: __( 'Background (selected)', 'mutuacat' ), value: attributes.activeBackground, onChange: function ( v ) { setAttributes( { activeBackground: v || '' } ); } },
+							{ label: __( 'Text (selected)', 'mutuacat' ), value: attributes.activeTextColor, onChange: function ( v ) { setAttributes( { activeTextColor: v || '' } ); } },
+							{ label: __( 'Border (selected)', 'mutuacat' ), value: attributes.activeBorderColor, onChange: function ( v ) { setAttributes( { activeBorderColor: v || '' } ); } },
 						],
 					} )
 				),
@@ -393,7 +407,7 @@ KQF_EDITOR_JS
 		wp_register_script( 'kqf-view', false, array(), '1.2.0', true );
 		wp_add_inline_script( 'kqf-view', <<<'KQF_VIEW_JS'
 /**
- * Frontend del bloc kiwwwilab/query-filter.
+ * Frontend del bloc mutuacat/query-filter.
  *
  * En clicar un terme, demana per AJAX la mateixa pàgina amb el filtre aplicat
  * (paràmetres ke-tax-{queryId}/ke-term-{queryId}, o ke-tax/ke-term si el Query
@@ -434,12 +448,12 @@ KQF_EDITOR_JS
 	}
 
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.wp-block-kiwwwilab-query-filter .ke-query-filter__button' );
+		var button = event.target.closest( '.wp-block-mutuacat-query-filter .ke-query-filter__button' );
 		if ( ! button ) {
 			return;
 		}
 
-		var filter = button.closest( '.wp-block-kiwwwilab-query-filter' );
+		var filter = button.closest( '.wp-block-mutuacat-query-filter' );
 		var query = filter.closest( '.wp-block-query' );
 		if ( ! query || button.classList.contains( 'is-active' ) ) {
 			return;
@@ -477,7 +491,7 @@ KQF_EDITOR_JS
 			} )
 			.then( function ( html ) {
 				var doc = new DOMParser().parseFromString( html, 'text/html' );
-				var newFilter = doc.querySelector( '.wp-block-kiwwwilab-query-filter[data-query-id="' + queryId + '"]' );
+				var newFilter = doc.querySelector( '.wp-block-mutuacat-query-filter[data-query-id="' + queryId + '"]' );
 				var newQuery = newFilter ? newFilter.closest( '.wp-block-query' ) : null;
 
 				if ( ! newQuery ) {
@@ -489,7 +503,7 @@ KQF_EDITOR_JS
 
 				// Mantenim el focus al botó seleccionat (accessibilitat amb teclat).
 				var activeButton = imported.querySelector(
-					'.wp-block-kiwwwilab-query-filter[data-query-id="' + queryId + '"] .ke-query-filter__button[data-term-id="' + termId + '"]'
+					'.wp-block-mutuacat-query-filter[data-query-id="' + queryId + '"] .ke-query-filter__button[data-term-id="' + termId + '"]'
 				);
 				if ( activeButton ) {
 					activeButton.focus( { preventScroll: true } );
@@ -497,7 +511,7 @@ KQF_EDITOR_JS
 
 				// Event perquè altres scripts (sliders, animacions...) es puguin reinicialitzar.
 				document.dispatchEvent(
-					new CustomEvent( 'kiwwwilab:query-filtered', {
+					new CustomEvent( 'mutuacat:query-filtered', {
 						detail: { queryId: queryId, taxonomy: taxonomy, termId: termId, query: imported },
 					} )
 				);
@@ -525,7 +539,7 @@ KQF_VIEW_JS
  * Valors per defecte amb especificitat baixa (:where) perquè les opcions natives
  * de WordPress (Block spacing, Padding i Border) sempre els puguin sobreescriure.
  */
-:where(.wp-block-kiwwwilab-query-filter) {
+:where(.wp-block-mutuacat-query-filter) {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--wp--preset--spacing--20, 10px);
@@ -536,7 +550,7 @@ KQF_VIEW_JS
  * text "contrast", fons "accent-1" i padding "spacing-20". Si el tema no les té,
  * s'utilitzen els mateixos valors de Twenty Twenty-Five com a alternativa.
  */
-:where(.wp-block-kiwwwilab-query-filter) .ke-query-filter__button {
+:where(.wp-block-mutuacat-query-filter) .ke-query-filter__button {
 	appearance: none;
 	-webkit-appearance: none;
 	margin: 0;
@@ -553,7 +567,7 @@ KQF_VIEW_JS
 	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button:focus-visible {
+.wp-block-mutuacat-query-filter .ke-query-filter__button:focus-visible {
 	outline: 2px solid currentColor;
 	outline-offset: 2px;
 }
@@ -563,14 +577,14 @@ KQF_VIEW_JS
  * (el fons agafa el color del text i el text el color del fons).
  * Han de guanyar a la regla generada per les opcions natives de Border.
  */
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button:hover,
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button.is-active {
+.wp-block-mutuacat-query-filter .ke-query-filter__button:hover,
+.wp-block-mutuacat-query-filter .ke-query-filter__button.is-active {
 	background-color: var(--ke-qf-active-bg, var(--ke-qf-color, var(--wp--preset--color--contrast, #111111)));
 	color: var(--ke-qf-active-color, var(--ke-qf-bg, var(--wp--preset--color--accent-1, #ffee58)));
 	border-color: var(--ke-qf-active-border, var(--ke-qf-active-bg, var(--ke-qf-border-color, currentColor)));
 }
 
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button.is-active {
+.wp-block-mutuacat-query-filter .ke-query-filter__button.is-active {
 	cursor: default;
 }
 
@@ -587,7 +601,7 @@ KQF_CSS
 		$kqf_meta = json_decode( <<<'KQF_JSON'
 {
   "apiVersion": 3,
-  "name": "kiwwwilab/query-filter",
+  "name": "mutuacat/query-filter",
   "title": "Kiwwwilab | Taxonomy Filter",
   "category": "theme",
   "icon": "filter",
@@ -599,7 +613,7 @@ KQF_CSS
     "queryId",
     "query"
   ],
-  "textdomain": "kiwwwilab-extend",
+  "textdomain": "mutuacat",
   "attributes": {
     "taxonomy": {
       "type": "string",
@@ -769,7 +783,7 @@ KQF_JSON
 		$ke_qf_active = $kqf_get_active( $ke_qf_inherit ? null : $ke_qf_query_id );
 		$ke_qf_active = ( $ke_qf_active && $ke_qf_active['taxonomy'] === $ke_qf_taxonomy ) ? $ke_qf_active['term_id'] : 0;
 
-		$ke_qf_all_text = isset( $attributes['allText'] ) && '' !== trim( $attributes['allText'] ) ? $attributes['allText'] : __( 'All', 'kiwwwilab-extend' );
+		$ke_qf_all_text = isset( $attributes['allText'] ) && '' !== trim( $attributes['allText'] ) ? $attributes['allText'] : __( 'All', 'mutuacat' );
 
 		// Variables CSS amb els colors dels botons.
 		$ke_qf_vars = array(
