@@ -15,32 +15,98 @@
 	var ToggleControl = components.ToggleControl;
 	var Notice = components.Notice;
 	var Spinner = components.Spinner;
-	var UnitControl = components.UnitControl || components.__experimentalUnitControl || TextControl;
-
 	var STYLE_VARS = {
 		buttonBackground: '--ke-qf-bg',
 		buttonTextColor: '--ke-qf-color',
 		activeBackground: '--ke-qf-active-bg',
 		activeTextColor: '--ke-qf-active-color',
-		buttonBorderColor: '--ke-qf-border-color',
 		activeBorderColor: '--ke-qf-active-border',
-		buttonBorderWidth: '--ke-qf-border-width',
-		buttonBorderRadius: '--ke-qf-radius',
-		buttonPaddingY: '--ke-qf-padding-y',
-		buttonPaddingX: '--ke-qf-padding-x',
 	};
 
-	function unitField( label, attr, attributes, setAttributes ) {
-		return el( UnitControl, {
-			label: label,
-			value: attributes[ attr ],
-			onChange: function ( value ) {
-				var obj = {};
-				obj[ attr ] = value || '';
-				setAttributes( obj );
-			},
-			__next40pxDefaultSize: true,
+	var SIDES = [ 'top', 'right', 'bottom', 'left' ];
+	var CORNERS = [ 'topLeft', 'topRight', 'bottomLeft', 'bottomRight' ];
+
+	function cap( str ) {
+		return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
+	}
+
+	// "var:preset|spacing|30" -> "var(--wp--preset--spacing--30)"
+	function presetVar( value ) {
+		if ( typeof value === 'string' && value.indexOf( 'var:' ) === 0 ) {
+			return 'var(--wp--' + value.slice( 4 ).split( '|' ).join( '--' ) + ')';
+		}
+		return value;
+	}
+
+	/*
+	 * Estils natius (Padding i Border) que a l'editor s'apliquen a cada botó,
+	 * igual que fa render.php al frontend.
+	 */
+	function getButtonStyles( attributes ) {
+		var style = {};
+		var native = attributes.style || {};
+		var padding = native.spacing && native.spacing.padding;
+		var border = native.border || {};
+
+		if ( typeof padding === 'string' ) {
+			style.padding = presetVar( padding );
+		} else if ( padding ) {
+			SIDES.forEach( function ( side ) {
+				if ( padding[ side ] ) {
+					style[ 'padding' + cap( side ) ] = presetVar( padding[ side ] );
+				}
+			} );
+		}
+
+		var borderColor = attributes.borderColor ? 'var(--wp--preset--color--' + attributes.borderColor + ')' : presetVar( border.color );
+		if ( border.width ) {
+			style.borderWidth = border.width;
+		}
+		if ( border.style ) {
+			style.borderStyle = border.style;
+		}
+		if ( borderColor ) {
+			style.borderColor = borderColor;
+		}
+
+		if ( typeof border.radius === 'string' ) {
+			style.borderRadius = presetVar( border.radius );
+		} else if ( border.radius ) {
+			CORNERS.forEach( function ( corner ) {
+				if ( border.radius[ corner ] ) {
+					style[ 'border' + cap( corner ) + 'Radius' ] = presetVar( border.radius[ corner ] );
+				}
+			} );
+		}
+
+		SIDES.forEach( function ( side ) {
+			var b = border[ side ];
+			if ( ! b ) {
+				return;
+			}
+			if ( b.width ) {
+				style[ 'border' + cap( side ) + 'Width' ] = b.width;
+			}
+			if ( b.style ) {
+				style[ 'border' + cap( side ) + 'Style' ] = b.style;
+			}
+			if ( b.color ) {
+				style[ 'border' + cap( side ) + 'Color' ] = presetVar( b.color );
+			}
 		} );
+
+		return { style: style, borderColor: borderColor };
+	}
+
+	// El botó seleccionat no ha de rebre el color de vora normal (l'aplica el CSS de l'estat actiu).
+	function withoutBorderColors( style ) {
+		var copy = {};
+		Object.keys( style ).forEach( function ( key ) {
+			if ( ! /^border(Top|Right|Bottom|Left)?Color$/.test( key ) ) {
+				copy[ key ] = style[ key ];
+			}
+		} );
+		return copy;
 	}
 
 	blocks.registerBlockType( 'kiwwwilab/query-filter', {
@@ -92,12 +158,18 @@
 				[ attributes.taxonomy, attributes.hideEmpty, attributes.orderBy, attributes.order ]
 			);
 
+			var buttonStyles = getButtonStyles( attributes );
+			var activeButtonStyle = withoutBorderColors( buttonStyles.style );
+
 			var style = {};
 			Object.keys( STYLE_VARS ).forEach( function ( key ) {
 				if ( attributes[ key ] ) {
 					style[ STYLE_VARS[ key ] ] = attributes[ key ];
 				}
 			} );
+			if ( buttonStyles.borderColor ) {
+				style[ '--ke-qf-border-color' ] = buttonStyles.borderColor;
+			}
 
 			var blockProps = useBlockProps( { className: 'ke-query-filter', style: style } );
 
@@ -106,10 +178,10 @@
 			} );
 
 			var buttons = [
-				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true' }, attributes.allText || __( 'All', 'kiwwwilab-extend' ) ),
+				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true', style: activeButtonStyle }, attributes.allText || __( 'All', 'kiwwwilab-extend' ) ),
 			].concat(
 				termsData.terms.map( function ( term ) {
-					return el( 'button', { key: term.id, type: 'button', className: 'ke-query-filter__button', 'aria-pressed': 'false' }, term.name );
+					return el( 'button', { key: term.id, type: 'button', className: 'ke-query-filter__button', 'aria-pressed': 'false', style: buttonStyles.style }, term.name );
 				} )
 			);
 
@@ -183,20 +255,11 @@
 						colorSettings: [
 							{ label: __( 'Background', 'kiwwwilab-extend' ), value: attributes.buttonBackground, onChange: function ( v ) { setAttributes( { buttonBackground: v || '' } ); } },
 							{ label: __( 'Text', 'kiwwwilab-extend' ), value: attributes.buttonTextColor, onChange: function ( v ) { setAttributes( { buttonTextColor: v || '' } ); } },
-							{ label: __( 'Border', 'kiwwwilab-extend' ), value: attributes.buttonBorderColor, onChange: function ( v ) { setAttributes( { buttonBorderColor: v || '' } ); } },
 							{ label: __( 'Background (selected)', 'kiwwwilab-extend' ), value: attributes.activeBackground, onChange: function ( v ) { setAttributes( { activeBackground: v || '' } ); } },
 							{ label: __( 'Text (selected)', 'kiwwwilab-extend' ), value: attributes.activeTextColor, onChange: function ( v ) { setAttributes( { activeTextColor: v || '' } ); } },
 							{ label: __( 'Border (selected)', 'kiwwwilab-extend' ), value: attributes.activeBorderColor, onChange: function ( v ) { setAttributes( { activeBorderColor: v || '' } ); } },
 						],
-					} ),
-					el(
-						PanelBody,
-						{ title: __( 'Button shape', 'kiwwwilab-extend' ), initialOpen: false },
-						unitField( __( 'Vertical padding', 'kiwwwilab-extend' ), 'buttonPaddingY', attributes, setAttributes ),
-						unitField( __( 'Horizontal padding', 'kiwwwilab-extend' ), 'buttonPaddingX', attributes, setAttributes ),
-						unitField( __( 'Border width', 'kiwwwilab-extend' ), 'buttonBorderWidth', attributes, setAttributes ),
-						unitField( __( 'Border radius', 'kiwwwilab-extend' ), 'buttonBorderRadius', attributes, setAttributes )
-					)
+					} )
 				),
 				el( 'div', blockProps, termsData.loading ? buttons.concat( [ el( Spinner, { key: 'spinner' } ) ] ) : buttons )
 			);

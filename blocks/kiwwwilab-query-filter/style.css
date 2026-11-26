@@ -1,10 +1,14 @@
-.wp-block-kiwwwilab-query-filter {
+/*
+ * Valors per defecte amb especificitat baixa (:where) perquè les opcions natives
+ * de WordPress (Block spacing, Padding i Border) sempre els puguin sobreescriure.
+ */
+:where(.wp-block-kiwwwilab-query-filter) {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--wp--style--block-gap, 0.5em);
+	gap: 0.5em;
 }
 
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button {
+:where(.wp-block-kiwwwilab-query-filter) .ke-query-filter__button {
 	appearance: none;
 	-webkit-appearance: none;
 	margin: 0;
@@ -15,11 +19,9 @@
 	line-height: inherit;
 	background-color: var(--ke-qf-bg, transparent);
 	color: var(--ke-qf-color, inherit);
-	border-style: solid;
-	border-width: var(--ke-qf-border-width, 1px);
-	border-color: var(--ke-qf-border-color, currentColor);
-	border-radius: var(--ke-qf-radius, 0);
-	padding: var(--ke-qf-padding-y, 0.5em) var(--ke-qf-padding-x, 1em);
+	border: 1px solid var(--ke-qf-border-color, currentColor);
+	border-radius: 0;
+	padding: 0.5em 1em;
 	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
 
@@ -32,6 +34,7 @@
 	outline-offset: 2px;
 }
 
+/* Estat seleccionat: ha de guanyar a la regla generada per les opcions natives */
 .wp-block-kiwwwilab-query-filter .ke-query-filter__button.is-active {
 	background-color: var(--ke-qf-active-bg, currentColor);
 	color: var(--ke-qf-active-color, #fff);
