@@ -1,10 +1,19 @@
-.wp-block-kiwwwilab-query-filter {
+/*
+ * Valors per defecte amb especificitat baixa (:where) perquè les opcions natives
+ * de WordPress (Block spacing, Padding i Border) sempre els puguin sobreescriure.
+ */
+:where(.wp-block-kiwwwilab-query-filter) {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--wp--style--block-gap, 0.5em);
+	gap: var(--wp--preset--spacing--20, 10px);
 }
 
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button {
+/*
+ * Valors per defecte basats en les variables de Twenty Twenty-Five:
+ * text "contrast", fons "accent-1" i padding "spacing-20". Si el tema no les té,
+ * s'utilitzen els mateixos valors de Twenty Twenty-Five com a alternativa.
+ */
+:where(.wp-block-kiwwwilab-query-filter) .ke-query-filter__button {
 	appearance: none;
 	-webkit-appearance: none;
 	margin: 0;
@@ -13,18 +22,12 @@
 	letter-spacing: inherit;
 	text-transform: inherit;
 	line-height: inherit;
-	background-color: var(--ke-qf-bg, transparent);
-	color: var(--ke-qf-color, inherit);
-	border-style: solid;
-	border-width: var(--ke-qf-border-width, 1px);
-	border-color: var(--ke-qf-border-color, currentColor);
-	border-radius: var(--ke-qf-radius, 0);
-	padding: var(--ke-qf-padding-y, 0.5em) var(--ke-qf-padding-x, 1em);
-	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
-}
-
-.wp-block-kiwwwilab-query-filter .ke-query-filter__button:hover:not(.is-active) {
-	opacity: 0.8;
+	background-color: var(--ke-qf-bg, var(--wp--preset--color--accent-1, #ffee58));
+	color: var(--ke-qf-color, var(--wp--preset--color--contrast, #111111));
+	border: 0 solid var(--ke-qf-border-color, currentColor);
+	border-radius: 0;
+	padding: var(--wp--preset--spacing--20, 10px);
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .wp-block-kiwwwilab-query-filter .ke-query-filter__button:focus-visible {
@@ -32,10 +35,19 @@
 	outline-offset: 2px;
 }
 
+/*
+ * Estat seleccionat i hover: per defecte, colors invertits respecte a l'estat normal
+ * (el fons agafa el color del text i el text el color del fons).
+ * Han de guanyar a la regla generada per les opcions natives de Border.
+ */
+.wp-block-kiwwwilab-query-filter .ke-query-filter__button:hover,
 .wp-block-kiwwwilab-query-filter .ke-query-filter__button.is-active {
-	background-color: var(--ke-qf-active-bg, currentColor);
-	color: var(--ke-qf-active-color, #fff);
+	background-color: var(--ke-qf-active-bg, var(--ke-qf-color, var(--wp--preset--color--contrast, #111111)));
+	color: var(--ke-qf-active-color, var(--ke-qf-bg, var(--wp--preset--color--accent-1, #ffee58)));
 	border-color: var(--ke-qf-active-border, var(--ke-qf-active-bg, var(--ke-qf-border-color, currentColor)));
+}
+
+.wp-block-kiwwwilab-query-filter .ke-query-filter__button.is-active {
 	cursor: default;
 }
 

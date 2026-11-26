@@ -54,35 +54,98 @@ $ke_qf_active = ( $ke_qf_active && $ke_qf_active['taxonomy'] === $ke_qf_taxonomy
 
 $ke_qf_all_text = isset( $attributes['allText'] ) && '' !== trim( $attributes['allText'] ) ? $attributes['allText'] : __( 'All', 'kiwwwilab-extend' );
 
-// Variables CSS amb els estils dels botons.
+// Variables CSS amb els colors dels botons.
 $ke_qf_vars = array(
-	'--ke-qf-bg'                => 'buttonBackground',
-	'--ke-qf-color'             => 'buttonTextColor',
-	'--ke-qf-active-bg'         => 'activeBackground',
-	'--ke-qf-active-color'      => 'activeTextColor',
-	'--ke-qf-border-color'      => 'buttonBorderColor',
-	'--ke-qf-active-border'     => 'activeBorderColor',
-	'--ke-qf-border-width'      => 'buttonBorderWidth',
-	'--ke-qf-radius'            => 'buttonBorderRadius',
-	'--ke-qf-padding-y'         => 'buttonPaddingY',
-	'--ke-qf-padding-x'         => 'buttonPaddingX',
+	'--ke-qf-bg'            => 'buttonBackground',
+	'--ke-qf-color'         => 'buttonTextColor',
+	'--ke-qf-active-bg'     => 'activeBackground',
+	'--ke-qf-active-color'  => 'activeTextColor',
+	'--ke-qf-active-border' => 'activeBorderColor',
 );
+
+$ke_qf_clean = static function ( $value ) {
+	// Eliminem qualsevol caràcter que pugui trencar la declaració CSS.
+	return is_string( $value ) ? trim( preg_replace( '/[;{}<>"\'\\\\]/', '', $value ) ) : '';
+};
 
 $ke_qf_style = '';
 foreach ( $ke_qf_vars as $ke_qf_var => $ke_qf_attr ) {
-	if ( empty( $attributes[ $ke_qf_attr ] ) || ! is_string( $attributes[ $ke_qf_attr ] ) ) {
-		continue;
-	}
-	// Eliminem qualsevol caràcter que pugui trencar la declaració CSS.
-	$ke_qf_value = trim( preg_replace( '/[;{}<>"\'\\\\]/', '', $attributes[ $ke_qf_attr ] ) );
+	$ke_qf_value = isset( $attributes[ $ke_qf_attr ] ) ? $ke_qf_clean( $attributes[ $ke_qf_attr ] ) : '';
 	if ( '' !== $ke_qf_value ) {
 		$ke_qf_style .= $ke_qf_var . ':' . $ke_qf_value . ';';
 	}
 }
 
+/*
+ * Block spacing: l'apliquem nosaltres com a "gap" inline (en lloc del sistema de layout,
+ * que depèn d'una classe wp-container-* i del tema) perquè funcioni sempre, també
+ * després de substituir el Query per AJAX.
+ */
+$ke_qf_preset = static function ( $value ) use ( $ke_qf_clean ) {
+	$value = $ke_qf_clean( $value );
+	if ( 0 === strpos( $value, 'var:' ) ) {
+		$value = 'var(--wp--' . str_replace( '|', '--', substr( $value, 4 ) ) . ')';
+	}
+	return $value;
+};
+
+$ke_qf_gap = isset( $attributes['style']['spacing']['blockGap'] ) ? $attributes['style']['spacing']['blockGap'] : null;
+if ( is_string( $ke_qf_gap ) && '' !== $ke_qf_preset( $ke_qf_gap ) ) {
+	$ke_qf_style .= 'gap:' . $ke_qf_preset( $ke_qf_gap ) . ';';
+} elseif ( is_array( $ke_qf_gap ) ) {
+	// En layouts flex: "top" és l'espai entre files i "left" entre columnes.
+	if ( ! empty( $ke_qf_gap['top'] ) ) {
+		$ke_qf_style .= 'row-gap:' . $ke_qf_preset( $ke_qf_gap['top'] ) . ';';
+	}
+	if ( ! empty( $ke_qf_gap['left'] ) ) {
+		$ke_qf_style .= 'column-gap:' . $ke_qf_preset( $ke_qf_gap['left'] ) . ';';
+	}
+}
+
+/*
+ * Opcions natives de WordPress (Padding i Border): no s'apliquen al contenidor
+ * (__experimentalSkipSerialization) sinó a cada botó, amb una regla CSS generada
+ * pel Style Engine. La classe és un hash dels estils, així és la mateixa
+ * en la resposta AJAX i l'estil ja carregat a la pàgina continua sent vàlid.
+ */
+$ke_qf_native = array();
+if ( ! empty( $attributes['style']['spacing']['padding'] ) ) {
+	$ke_qf_native['spacing'] = array( 'padding' => $attributes['style']['spacing']['padding'] );
+}
+if ( ! empty( $attributes['style']['border'] ) && is_array( $attributes['style']['border'] ) ) {
+	$ke_qf_native['border'] = $attributes['style']['border'];
+}
+if ( ! empty( $attributes['borderColor'] ) ) {
+	$ke_qf_native['border']['color'] = 'var:preset|color|' . sanitize_key( $attributes['borderColor'] );
+}
+
+$ke_qf_class = 'ke-query-filter';
+if ( $ke_qf_native && function_exists( 'wp_style_engine_get_styles' ) ) {
+	$ke_qf_hash     = 'ke-qf-' . substr( md5( wp_json_encode( $ke_qf_native ) ), 0, 10 );
+	$ke_qf_rendered = wp_style_engine_get_styles(
+		$ke_qf_native,
+		array(
+			'selector' => '.' . $ke_qf_hash . ' .ke-query-filter__button',
+			'context'  => 'block-supports',
+		)
+	);
+	if ( ! empty( $ke_qf_rendered['css'] ) ) {
+		$ke_qf_class .= ' ' . $ke_qf_hash;
+	}
+
+	// Color de vora normal com a variable, perquè l'estat seleccionat el pugui heretar.
+	if ( ! empty( $ke_qf_native['border']['color'] ) ) {
+		$ke_qf_border_color = $ke_qf_clean( $ke_qf_native['border']['color'] );
+		if ( 0 === strpos( $ke_qf_border_color, 'var:preset|color|' ) ) {
+			$ke_qf_border_color = 'var(--wp--preset--color--' . _wp_to_kebab_case( substr( $ke_qf_border_color, 17 ) ) . ')';
+		}
+		$ke_qf_style .= '--ke-qf-border-color:' . $ke_qf_border_color . ';';
+	}
+}
+
 $ke_qf_wrapper = get_block_wrapper_attributes(
 	array(
-		'class'         => 'ke-query-filter',
+		'class'         => $ke_qf_class,
 		'style'         => $ke_qf_style,
 		'role'          => 'group',
 		'aria-label'    => get_taxonomy( $ke_qf_taxonomy )->labels->name,

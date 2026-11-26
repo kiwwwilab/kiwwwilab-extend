@@ -2,45 +2,99 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "kiwwwilab/query-filter",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "title": "Kiwwwilab | Taxonomy Filter",
   "category": "theme",
   "icon": "filter",
   "description": "Buttons to filter the Query block posts by a taxonomy term, without reloading the page.",
-  "ancestor": [ "core/query" ],
-  "usesContext": [ "queryId", "query" ],
+  "ancestor": [
+    "core/query"
+  ],
+  "usesContext": [
+    "queryId",
+    "query"
+  ],
   "textdomain": "kiwwwilab-extend",
   "attributes": {
-    "taxonomy": { "type": "string", "default": "" },
-    "allText": { "type": "string", "default": "All" },
-    "hideEmpty": { "type": "boolean", "default": true },
-    "orderBy": { "type": "string", "enum": [ "name", "slug", "count", "id" ], "default": "name" },
-    "order": { "type": "string", "enum": [ "asc", "desc" ], "default": "asc" },
-    "buttonBackground": { "type": "string", "default": "" },
-    "buttonTextColor": { "type": "string", "default": "" },
-    "activeBackground": { "type": "string", "default": "" },
-    "activeTextColor": { "type": "string", "default": "" },
-    "buttonBorderColor": { "type": "string", "default": "" },
-    "activeBorderColor": { "type": "string", "default": "" },
-    "buttonBorderWidth": { "type": "string", "default": "1px" },
-    "buttonBorderRadius": { "type": "string", "default": "0px" },
-    "buttonPaddingY": { "type": "string", "default": "0.5em" },
-    "buttonPaddingX": { "type": "string", "default": "1em" }
+    "taxonomy": {
+      "type": "string",
+      "default": ""
+    },
+    "allText": {
+      "type": "string",
+      "default": "All"
+    },
+    "hideEmpty": {
+      "type": "boolean",
+      "default": true
+    },
+    "orderBy": {
+      "type": "string",
+      "enum": [
+        "name",
+        "slug",
+        "count",
+        "id"
+      ],
+      "default": "name"
+    },
+    "order": {
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "default": "asc"
+    },
+    "buttonBackground": {
+      "type": "string",
+      "default": ""
+    },
+    "buttonTextColor": {
+      "type": "string",
+      "default": ""
+    },
+    "activeBackground": {
+      "type": "string",
+      "default": ""
+    },
+    "activeTextColor": {
+      "type": "string",
+      "default": ""
+    },
+    "activeBorderColor": {
+      "type": "string",
+      "default": ""
+    }
   },
   "supports": {
     "html": false,
     "reusable": false,
-    "align": [ "wide", "full" ],
+    "align": [
+      "wide",
+      "full"
+    ],
     "spacing": {
       "margin": true,
       "padding": true,
-      "blockGap": true
+      "blockGap": true,
+      "__experimentalSkipSerialization": [
+        "padding",
+        "blockGap"
+      ],
+      "__experimentalDefaultControls": {
+        "padding": true,
+        "blockGap": true
+      }
     },
     "layout": {
       "allowSwitching": false,
       "allowInheriting": false,
       "allowVerticalAlignment": false,
-      "default": { "type": "flex", "flexWrap": "wrap" }
+      "default": {
+        "type": "flex",
+        "flexWrap": "wrap"
+      }
     },
     "typography": {
       "fontSize": true,
@@ -49,7 +103,22 @@
       "__experimentalFontWeight": true,
       "__experimentalTextTransform": true,
       "__experimentalLetterSpacing": true,
-      "__experimentalDefaultControls": { "fontSize": true }
+      "__experimentalDefaultControls": {
+        "fontSize": true
+      }
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalSkipSerialization": true,
+      "__experimentalDefaultControls": {
+        "color": true,
+        "radius": true,
+        "style": true,
+        "width": true
+      }
     }
   },
   "editorScript": "file:./index.js",
