@@ -52,7 +52,7 @@ if ( is_wp_error( $ke_qf_terms ) ) {
 $ke_qf_active = ke_query_filter_get_active( $ke_qf_inherit ? null : $ke_qf_query_id );
 $ke_qf_active = ( $ke_qf_active && $ke_qf_active['taxonomy'] === $ke_qf_taxonomy ) ? $ke_qf_active['term_id'] : 0;
 
-$ke_qf_all_text = isset( $attributes['allText'] ) && '' !== trim( $attributes['allText'] ) ? $attributes['allText'] : __( 'Tots', 'kiwwwilab-extend' );
+$ke_qf_all_text = isset( $attributes['allText'] ) && '' !== trim( $attributes['allText'] ) ? $attributes['allText'] : __( 'All', 'kiwwwilab-extend' );
 
 // Variables CSS amb els estils dels botons.
 $ke_qf_vars = array(

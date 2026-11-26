@@ -106,7 +106,7 @@
 			} );
 
 			var buttons = [
-				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true' }, attributes.allText || __( 'Tots', 'kiwwwilab-extend' ) ),
+				el( 'button', { key: 'all', type: 'button', className: 'ke-query-filter__button is-active', 'aria-pressed': 'true' }, attributes.allText || __( 'All', 'kiwwwilab-extend' ) ),
 			].concat(
 				termsData.terms.map( function ( term ) {
 					return el( 'button', { key: term.id, type: 'button', className: 'ke-query-filter__button', 'aria-pressed': 'false' }, term.name );
@@ -121,40 +121,40 @@
 					null,
 					el(
 						PanelBody,
-						{ title: __( 'Configuració del filtre', 'kiwwwilab-extend' ) },
+						{ title: __( 'Filter settings', 'kiwwwilab-extend' ) },
 						taxonomies === null
 							? el( Spinner )
 							: taxonomyOptions.length
 							? el( SelectControl, {
-									label: __( 'Taxonomia', 'kiwwwilab-extend' ),
-									help: __( 'Taxonomies disponibles per al post type del Query.', 'kiwwwilab-extend' ),
+									label: __( 'Taxonomy', 'kiwwwilab-extend' ),
+									help: __( 'Taxonomies available for the Query post type.', 'kiwwwilab-extend' ),
 									value: attributes.taxonomy,
 									options: taxonomyOptions,
 									onChange: function ( value ) { setAttributes( { taxonomy: value } ); },
 									__next40pxDefaultSize: true,
 									__nextHasNoMarginBottom: true,
 							  } )
-							: el( Notice, { status: 'warning', isDismissible: false }, __( 'Aquest post type no té cap taxonomia.', 'kiwwwilab-extend' ) ),
+							: el( Notice, { status: 'warning', isDismissible: false }, __( 'This post type has no taxonomies.', 'kiwwwilab-extend' ) ),
 						el( TextControl, {
-							label: __( 'Text del botó "Tots"', 'kiwwwilab-extend' ),
+							label: __( '"All" button text', 'kiwwwilab-extend' ),
 							value: attributes.allText,
 							onChange: function ( value ) { setAttributes( { allText: value } ); },
 							__next40pxDefaultSize: true,
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( ToggleControl, {
-							label: __( 'Amagar termes sense posts', 'kiwwwilab-extend' ),
+							label: __( 'Hide empty terms', 'kiwwwilab-extend' ),
 							checked: attributes.hideEmpty,
 							onChange: function ( value ) { setAttributes( { hideEmpty: value } ); },
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( SelectControl, {
-							label: __( 'Ordenar termes per', 'kiwwwilab-extend' ),
+							label: __( 'Order terms by', 'kiwwwilab-extend' ),
 							value: attributes.orderBy,
 							options: [
-								{ label: __( 'Nom', 'kiwwwilab-extend' ), value: 'name' },
+								{ label: __( 'Name', 'kiwwwilab-extend' ), value: 'name' },
 								{ label: __( 'Slug', 'kiwwwilab-extend' ), value: 'slug' },
-								{ label: __( 'Nombre de posts', 'kiwwwilab-extend' ), value: 'count' },
+								{ label: __( 'Post count', 'kiwwwilab-extend' ), value: 'count' },
 								{ label: __( 'ID', 'kiwwwilab-extend' ), value: 'id' },
 							],
 							onChange: function ( value ) { setAttributes( { orderBy: value } ); },
@@ -162,11 +162,11 @@
 							__nextHasNoMarginBottom: true,
 						} ),
 						el( SelectControl, {
-							label: __( 'Ordre', 'kiwwwilab-extend' ),
+							label: __( 'Order', 'kiwwwilab-extend' ),
 							value: attributes.order,
 							options: [
-								{ label: __( 'Ascendent', 'kiwwwilab-extend' ), value: 'asc' },
-								{ label: __( 'Descendent', 'kiwwwilab-extend' ), value: 'desc' },
+								{ label: __( 'Ascending', 'kiwwwilab-extend' ), value: 'asc' },
+								{ label: __( 'Descending', 'kiwwwilab-extend' ), value: 'desc' },
 							],
 							onChange: function ( value ) { setAttributes( { order: value } ); },
 							__next40pxDefaultSize: true,
@@ -178,24 +178,24 @@
 					InspectorControls,
 					{ group: 'styles' },
 					el( PanelColorSettings, {
-						title: __( 'Colors dels botons', 'kiwwwilab-extend' ),
+						title: __( 'Button colors', 'kiwwwilab-extend' ),
 						initialOpen: true,
 						colorSettings: [
-							{ label: __( 'Fons', 'kiwwwilab-extend' ), value: attributes.buttonBackground, onChange: function ( v ) { setAttributes( { buttonBackground: v || '' } ); } },
+							{ label: __( 'Background', 'kiwwwilab-extend' ), value: attributes.buttonBackground, onChange: function ( v ) { setAttributes( { buttonBackground: v || '' } ); } },
 							{ label: __( 'Text', 'kiwwwilab-extend' ), value: attributes.buttonTextColor, onChange: function ( v ) { setAttributes( { buttonTextColor: v || '' } ); } },
-							{ label: __( 'Vora', 'kiwwwilab-extend' ), value: attributes.buttonBorderColor, onChange: function ( v ) { setAttributes( { buttonBorderColor: v || '' } ); } },
-							{ label: __( 'Fons (seleccionat)', 'kiwwwilab-extend' ), value: attributes.activeBackground, onChange: function ( v ) { setAttributes( { activeBackground: v || '' } ); } },
-							{ label: __( 'Text (seleccionat)', 'kiwwwilab-extend' ), value: attributes.activeTextColor, onChange: function ( v ) { setAttributes( { activeTextColor: v || '' } ); } },
-							{ label: __( 'Vora (seleccionat)', 'kiwwwilab-extend' ), value: attributes.activeBorderColor, onChange: function ( v ) { setAttributes( { activeBorderColor: v || '' } ); } },
+							{ label: __( 'Border', 'kiwwwilab-extend' ), value: attributes.buttonBorderColor, onChange: function ( v ) { setAttributes( { buttonBorderColor: v || '' } ); } },
+							{ label: __( 'Background (selected)', 'kiwwwilab-extend' ), value: attributes.activeBackground, onChange: function ( v ) { setAttributes( { activeBackground: v || '' } ); } },
+							{ label: __( 'Text (selected)', 'kiwwwilab-extend' ), value: attributes.activeTextColor, onChange: function ( v ) { setAttributes( { activeTextColor: v || '' } ); } },
+							{ label: __( 'Border (selected)', 'kiwwwilab-extend' ), value: attributes.activeBorderColor, onChange: function ( v ) { setAttributes( { activeBorderColor: v || '' } ); } },
 						],
 					} ),
 					el(
 						PanelBody,
-						{ title: __( 'Forma dels botons', 'kiwwwilab-extend' ), initialOpen: false },
-						unitField( __( 'Padding vertical', 'kiwwwilab-extend' ), 'buttonPaddingY', attributes, setAttributes ),
-						unitField( __( 'Padding horitzontal', 'kiwwwilab-extend' ), 'buttonPaddingX', attributes, setAttributes ),
-						unitField( __( 'Gruix de la vora', 'kiwwwilab-extend' ), 'buttonBorderWidth', attributes, setAttributes ),
-						unitField( __( 'Radi de la vora', 'kiwwwilab-extend' ), 'buttonBorderRadius', attributes, setAttributes )
+						{ title: __( 'Button shape', 'kiwwwilab-extend' ), initialOpen: false },
+						unitField( __( 'Vertical padding', 'kiwwwilab-extend' ), 'buttonPaddingY', attributes, setAttributes ),
+						unitField( __( 'Horizontal padding', 'kiwwwilab-extend' ), 'buttonPaddingX', attributes, setAttributes ),
+						unitField( __( 'Border width', 'kiwwwilab-extend' ), 'buttonBorderWidth', attributes, setAttributes ),
+						unitField( __( 'Border radius', 'kiwwwilab-extend' ), 'buttonBorderRadius', attributes, setAttributes )
 					)
 				),
 				el( 'div', blockProps, termsData.loading ? buttons.concat( [ el( Spinner, { key: 'spinner' } ) ] ) : buttons )
